@@ -36,7 +36,7 @@ class APIScript:
         self.api_key = os.getenv('API_KEY')
         self.headspin_header = {
             'Content-Type': 'application/json',
-            'Authorization': f'Bearer {self.api_key}'
+            'Authorization': f'Bearer {self.api_key}',
         }
         self.base_api_url = f'https://{self.api_key}@api-dev.headspin.io'
 
@@ -77,7 +77,7 @@ class APIScript:
         logger.warning("Script started")
 
         # Device to target
-        device_target = 'LGTV_5.30.25OS_2_DUT'
+        device_target = 'SamsungTV_2021_19_DUT'
         dut_device_id = os.getenv(f'{device_target}_Id')
         dut_hostname = os.getenv(f'{device_target}_Host')
         dut_device_address = os.getenv(f'{device_target}_Address')
@@ -99,7 +99,9 @@ class APIScript:
         # Capture dict
         session_capture_settings = {
             "session_type": "capture",
-            "device_address": device_address_we_use
+            "device_address": device_address_we_use,
+            "capture_video": True,
+            "capture_network": False
         }
 
         # List of API endpoints
@@ -126,9 +128,9 @@ class APIScript:
         if session_start_api_call:
             logger.info("Session recording started")
             logger.info(session_start_api_call)
-            logger.info(f'https://ui.headspin.io/sessions/{session_id}/waterfall')
             try:
                 session_id = session_start_api_call['session_id']
+                logger.info(f'https://ui.headspin.io/sessions/{session_id}/waterfall')
             except Exception as e:
                 logger.error('Could not get session ID') 
                 logger.error(f'Error: {e}')
