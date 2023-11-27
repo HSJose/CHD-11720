@@ -74,10 +74,10 @@ class APIScript:
             return None
 
     def main(self):
-        logger.info("Script started")
+        logger.warning("Script started")
 
         # Device to target
-        device_target = 'SamsungTV_2021_19_DUT'
+        device_target = 'LGTV_5.30.25OS_2_DUT'
         dut_device_id = os.getenv(f'{device_target}_Id')
         dut_hostname = os.getenv(f'{device_target}_Host')
         dut_device_address = os.getenv(f'{device_target}_Address')
@@ -151,7 +151,7 @@ class APIScript:
         device_unlock = self.call_api(f'{self.base_api_url}{unlock}', data=lock_data, headers=self.headspin_header)
         logger.info(device_unlock)
 
-        logger.info("Script ended")
+        logger.warning("Script ended")
 
 
 if __name__ == '__main__':
