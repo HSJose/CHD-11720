@@ -138,7 +138,7 @@ class APIScript:
             logger.info("Session recording failed")
 
         # Step 3 Manually create data if need be
-        input("Press Enter to continue...")
+        entry = console.input("Press Enter to continue...")
 
         # Step 4 End session recording
         # if session_id:
