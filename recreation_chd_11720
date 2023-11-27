@@ -1,9 +1,13 @@
 import httpx
 from dotenv import load_dotenv
-from rich import print
+from rich.console import Console
+from rich.logging import RichHandler
 from time import sleep
 import os
 import logging
+
+# Create a Rich Console object
+console = Console()
 
 # Set up logging to file and console
 logger = logging.getLogger('APIScriptLogger')
@@ -14,10 +18,9 @@ file_handler = logging.FileHandler('script_log.log')
 file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(message)s'))
 
-# Create console handler with a higher log level
-console_handler = logging.StreamHandler()
+# Create console handler with RichHandler for rich output
+console_handler = RichHandler(console=console, rich_tracebacks=True)
 console_handler.setLevel(logging.INFO)
-console_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(message)s'))
 
 # Add handlers to the logger
 logger.addHandler(file_handler)
@@ -56,8 +59,7 @@ class APIScript:
                     logger.info(response.text)
                     return response.json()
                 else:
-                    logger.error(response.text)
-                    raise Exception(f"API call failed with status code {response.status_code}")
+                    logger.error(f'API call failed with status code {response.text}')
             except (httpx.RequestError, httpx.HTTPStatusError, ValueError) as e:
                 last_exception = e
                 logger.error(f"Attempt {attempt + 1} failed: {e}")
@@ -75,13 +77,13 @@ class APIScript:
         logger.info("Script started")
 
         # Device to target
-        device_target = 'Roku_4800X_US_10_DUT'
+        device_target = 'SamsungTV_2021_19_DUT'
         dut_device_id = os.getenv(f'{device_target}_Id')
         dut_hostname = os.getenv(f'{device_target}_Host')
         dut_device_address = os.getenv(f'{device_target}_Address')
 
         # CD Device
-        CD_target = 'Roku_4800X_US_10_CD'
+        CD_target = device_target.replace('DUT', 'CD')
         CD_device_id = os.getenv(f'{CD_target}_Id')
         CD_hostname = os.getenv(f'{CD_target}_Host')
         CD_device_address = os.getenv(f'{CD_target}_Address')
@@ -90,7 +92,7 @@ class APIScript:
         session_id = None
 
         # Is AvBox
-        is_avbox = False
+        is_avbox = True
         device_address_we_use = CD_device_address if is_avbox else dut_device_address
         logger.info(device_address_we_use)
 
@@ -98,10 +100,6 @@ class APIScript:
         session_capture_settings = {
             "session_type": "capture",
             "device_address": device_address_we_use
-            # "capture_video": True,
-            # "capture_network": True,
-            # "network_shaping": network_shaping
-            # "disable_http2": True
         }
 
         # List of API endpoints
@@ -124,7 +122,6 @@ class APIScript:
 
         # Step 2 Start session recording
         logger.info("Starting session recording")
-        
         session_start_api_call = self.call_api(f'{self.base_api_url}{session_start}', data=session_capture_settings, headers=self.headspin_header)
         if session_start_api_call:
             logger.info("Session recording started")
