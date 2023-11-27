@@ -1,0 +1,162 @@
+import httpx
+from dotenv import load_dotenv
+from rich import print
+from time import sleep
+import os
+import logging
+
+# Set up logging to file and console
+logger = logging.getLogger('APIScriptLogger')
+logger.setLevel(logging.INFO)
+
+# Create file handler which logs even debug messages
+file_handler = logging.FileHandler('script_log.log')
+file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(message)s'))
+
+# Create console handler with a higher log level
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(message)s'))
+
+# Add handlers to the logger
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
+
+class APIScript:
+    def __init__(self):
+
+        # Load environmental variables from .env file
+        load_dotenv()  
+
+        # Set up API key and headers
+        self.api_key = os.getenv('API_KEY')
+        self.headspin_header = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {self.api_key}'
+        }
+        self.base_api_url = f'https://{self.api_key}@api-dev.headspin.io'
+
+    def call_api(self, url: str, method='post', data: dict = None, headers: dict = None, retries=3, timeout=60):
+        last_exception = None
+        for attempt in range(retries):
+            try:
+                # Determine which HTTP method to use
+                if method.lower() == 'post':
+                    response = httpx.post(url, json=data, headers=headers, timeout=timeout)
+                elif method.lower() == 'get':
+                    response = httpx.get(url, headers=headers, timeout=timeout)
+                elif method.lower() == 'patch':
+                    response = httpx.patch(url, json=data, headers=headers, timeout=timeout)
+                else:
+                    raise ValueError(f"Unsupported HTTP method: {method}")
+
+                # Check response status
+                if response.status_code == 200:
+                    logger.info(response.text)
+                    return response.json()
+                else:
+                    logger.error(response.text)
+                    raise Exception(f"API call failed with status code {response.status_code}")
+            except (httpx.RequestError, httpx.HTTPStatusError, ValueError) as e:
+                last_exception = e
+                logger.error(f"Attempt {attempt + 1} failed: {e}")
+                sleep(5)  # wait for 5 seconds before retrying
+            else:
+                break  # Successful request, exit loop
+
+        logger.info(f'Completed API call to {url}')
+        
+        if last_exception:
+            logger.error("All attempts to call the API have failed.")
+            return None
+
+    def main(self):
+        logger.info("Script started")
+
+        # Device to target
+        device_target = 'Roku_4800X_US_10_DUT'
+        dut_device_id = os.getenv(f'{device_target}_Id')
+        dut_hostname = os.getenv(f'{device_target}_Host')
+        dut_device_address = os.getenv(f'{device_target}_Address')
+
+        # CD Device
+        CD_target = 'Roku_4800X_US_10_CD'
+        CD_device_id = os.getenv(f'{CD_target}_Id')
+        CD_hostname = os.getenv(f'{CD_target}_Host')
+        CD_device_address = os.getenv(f'{CD_target}_Address')
+
+        # Session ID
+        session_id = None
+
+        # Is AvBox
+        is_avbox = False
+        device_address_we_use = CD_device_address if is_avbox else dut_device_address
+        logger.info(device_address_we_use)
+
+        # Capture dict
+        session_capture_settings = {
+            "session_type": "capture",
+            "device_address": device_address_we_use
+            # "capture_video": True,
+            # "capture_network": True,
+            # "network_shaping": network_shaping
+            # "disable_http2": True
+        }
+
+        # List of API endpoints
+
+        lock = f'/v0/devices/lock'
+        lock_data = {"hostname": dut_hostname, "device_id": dut_device_id}
+        unlock = f'/v0/devices/unlock'
+        session_start = f'/v0/sessions'
+        
+
+        # Step 1 Lock Device
+        logger.info("Locking Device")
+        device_lock = self.call_api(f'{self.base_api_url}{lock}', data=lock_data, headers=self.headspin_header)
+        if device_lock:
+            logger.info("Device Locked")
+            logger.info(device_lock)
+        else:
+            logger.info("Device lock failed")
+            
+
+        # Step 2 Start session recording
+        logger.info("Starting session recording")
+        
+        session_start_api_call = self.call_api(f'{self.base_api_url}{session_start}', data=session_capture_settings, headers=self.headspin_header)
+        if session_start_api_call:
+            logger.info("Session recording started")
+            logger.info(session_start_api_call)
+            logger.info(f'https://ui.headspin.io/sessions/{session_id}/waterfall')
+            try:
+                session_id = session_start_api_call['session_id']
+            except Exception as e:
+                logger.error('Could not get session ID') 
+                logger.error(f'Error: {e}')
+        else:
+            logger.info("Session recording failed")
+
+        # Step 3 Manually create data if need be
+        input("Press Enter to continue...")
+
+        # Step 4 End session recording
+        # if session_id:
+        #     session_end = f'/v0/sessions/{session_id}'
+        #     end_data = {"active": False}
+        #     logger.info("Ending session recording")
+        #     session_end_api_call = self.call_api(f'{self.base_api_url}{session_end}', method='patch', data=end_data, headers=self.headspin_header)
+        #     logger.info("Session recording ended")
+        #     logger.info(session_end_api_call)
+
+        # Step 5 Unlock device
+        device_unlock = self.call_api(f'{self.base_api_url}{unlock}', data=lock_data, headers=self.headspin_header)
+        logger.info(device_unlock)
+
+        logger.info("Script ended")
+
+
+if __name__ == '__main__':
+    api_manager = APIScript()
+    api_manager.main()
