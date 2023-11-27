@@ -1,0 +1,21 @@
+API_KEY='Some API Key'
+
+# NvidiaShield_1_DUT
+NvidiaShield_1_DUT_Id='1322723026218'
+NvidiaShield_1_DUT_Host='dev-us-sny-9-proxy-29-lin.headspin.io'
+NvidiaShield_1_DUT_Address='1322723026218@dev-us-sny-9-proxy-29-lin.headspin.io'
+
+# NvidiaShield_2_DUT
+NvidiaShield_2_DUT_Id='0325018084594'
+NvidiaShield_2_DUT_Host='dev-us-sny-9-proxy-25-lin.headspin.io'
+NvidiaShield_2_DUT_Address='0325018084594@dev-us-sny-9-proxy-25-lin.headspin.io'
+
+# LGTV_8.1.0OS_6_DUT
+LGTV_8.1.0OS_6_DUT_Id='305RMYA8A082'
+LGTV_8.1.0OS_6_DUT_Host='dev-us-sny-9-proxy-27-lin.headspin.io'
+LGTV_8.1.0OS_6_DUT_Address='305RMYA8A082@dev-us-sny-9-proxy-27-lin.headspin.io'
+
+# LGTV_8.1.0OS_6_CD
+LGTV_8.1.0OS_6_CD_Id='R5CR82SHTCB'
+LGTV_8.1.0OS_6_CD_Host='dev-us-sny-9-proxy-27-lin.headspin.io'
+LGTV_8.1.0OS_6_CD_Address='R5CR82SHTCB@dev-us-sny-9-proxy-27-lin.headspin.io'
