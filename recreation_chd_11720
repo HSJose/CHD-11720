@@ -77,7 +77,7 @@ class APIScript:
         logger.warning("Script started")
 
         # Device to target
-        device_target = 'SamsungTV_2021_19_DUT'
+        device_target = 'Roku_4800X_US_10_DUT'
         dut_device_id = os.getenv(f'{device_target}_Id')
         dut_hostname = os.getenv(f'{device_target}_Host')
         dut_device_address = os.getenv(f'{device_target}_Address')
@@ -123,6 +123,8 @@ class APIScript:
             
 
         # Step 2 Start session recording
+        logger.info("Waiting for 5 seconds before starting session recording")
+        sleep(5)
         logger.info("Starting session recording")
         session_start_api_call = self.call_api(f'{self.base_api_url}{session_start}', data=session_capture_settings, headers=self.headspin_header)
         if session_start_api_call:
